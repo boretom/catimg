@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define STB_IMAGE_IMPLEMENTATION
 #include "sh_image.h"
 #include "sh_utils.h"
 #include <unistd.h>
@@ -161,7 +160,8 @@ int main(int argc, char *argv[])
 
         printf("\033]");
         printf("1337;File=inline=1");
-        printf(";width=%dpx", 14*cols);
+        //printf(";width=%dpx", 750 * cols / 100);
+        printf(";width=%d", cols);
         printf(":");
         fseek(f,0,SEEK_SET);
         int flen = 0;

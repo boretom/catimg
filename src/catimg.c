@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define STB_IMAGE_IMPLEMENTATION
 #include "sh_image.h"
 #include "sh_utils.h"
 #include <unistd.h>
@@ -106,6 +107,12 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    // check if we're in iTerm2+ and precision is 0
+    int in_iterm = 0;
+    if ((getenv("ITERM_SESSION_ID") != NULL) && (precision == 0)) {
+       in_iterm = 1;
+    }
+
     if (precision == 0 || precision > 2) {
         if (supportsUTF8())
             precision = 2;
@@ -113,15 +120,10 @@ int main(int argc, char *argv[])
             precision = 1;
     }
 
-    // check if we're in iTerm2+
-    int in_iterm = 0;
-    if (getenv("ITERM_SESSION_ID") != NULL) {
-       in_iterm = 1;
-    }
-
     if (cols < 1) // if precision is 2 we can use the terminal full width. Otherwise we can only use half
         cols = terminal_columns() / (2 / precision);
 
+  if( !in_iterm ) {
     if (strcmp(file, "-") == 0) {
         img_load_from_stdin(&img);
     } else {
@@ -141,44 +143,35 @@ int main(int argc, char *argv[])
     } else {
         loops = 0;
     }
+  }
     // Save the cursor position and hide it
     printf("\e[s\e[?25l");
 
     if (in_iterm) {
-        FILE *f = fopen(file, "rb");
+        FILE *f;
+        if( !strcmp(file, "-") || !strcmp(file, "") ) {
+            f = stdin;
+        } else {
+            FILE *f = fopen(file, "rb");
+        }
         size_t result;
         char *buffer;
-#define READ_FILE_LOOP 1
-#ifdef READ_FILE_LOOP
         long fsize = 72 * 1024;
-#else
-        fseek(f, 0, SEEK_END);
-        long fsize=ftell(f);
-        fseek(f,0,SEEK_SET);
-#endif
         buffer = (char *) malloc(sizeof(char)*fsize);
 
         printf("\033]");
         printf("1337;File=inline=1");
-        printf(";width=%dpx", cols);
+        printf(";width=%dpx", 14*cols);
         printf(":");
-#ifdef READ_FILE_LOOP
         fseek(f,0,SEEK_SET);
         while ( !feof(f) ) {
             memset(buffer,0,sizeof(char) * fsize);
             result = fread(buffer, 1, fsize, f);
-	    if (ferror(f)) { fputs("fread() loop went wrong", stderr); }
+            if (ferror(f)) { fputs("fread() loop went wrong", stderr); }
             fputs(base64_encode(buffer, result, NULL),stdout);
         }
-#else
-        // copy the file into the buffer:
-        result = fread (buffer,1,fsize,f);
-        // if (result != fsize) {fputs ("Reading error",stderr); exit (3);}
-        printf(base64_encode(buffer, result, NULL));
-#endif
-
         printf("\007\n");
-	free(buffer);
+        free(buffer);
         fclose(f);
     } else {
     while (loop++ < loops || loops < 0) {
@@ -252,11 +245,10 @@ int main(int argc, char *argv[])
             if (stop) frame = img.frames;
         }
     }
+    img_free(&img);
+    free_hash_colors();
     } // if (in_iterm)
     // Display the cursor again
     printf("\e[?25h");
-
-    img_free(&img);
-    free_hash_colors();
     return 0;
 }

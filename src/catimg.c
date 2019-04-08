@@ -149,10 +149,10 @@ int main(int argc, char *argv[])
 
     if (in_iterm) {
         FILE *f;
-        if( !strcmp(file, "-") || !strcmp(file, "") ) {
+        if( !strcmp(file, "-") ) {
             f = stdin;
         } else {
-            FILE *f = fopen(file, "rb");
+            f = fopen(file, "rb");
         }
         size_t result;
         char *buffer;

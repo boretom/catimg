@@ -149,10 +149,10 @@ int main(int argc, char *argv[])
 
     if (in_iterm) {
         FILE *f;
-        if( !strcmp(file, "-") || !strcmp(file, "") ) {
+        if( !strcmp(file, "-") ) {
             f = stdin;
         } else {
-            FILE *f = fopen(file, "rb");
+            f = fopen(file, "rb");
         }
         size_t result;
         char *buffer;
@@ -164,11 +164,12 @@ int main(int argc, char *argv[])
         printf(";width=%dpx", 14*cols);
         printf(":");
         fseek(f,0,SEEK_SET);
+        int flen = 0;
         while ( !feof(f) ) {
             memset(buffer,0,sizeof(char) * fsize);
             result = fread(buffer, 1, fsize, f);
             if (ferror(f)) { fputs("fread() loop went wrong", stderr); }
-            fputs(base64_encode(buffer, result, NULL),stdout);
+            fputs(base64(buffer, result, &flen),stdout);
         }
         printf("\007\n");
         free(buffer);

@@ -5,34 +5,76 @@ catimg \- fast image printing in to your terminal
 
 .SH SYNOPSIS
 .B catimg
-[\fB-hct\fP] [\fB-w width\fP | \fB-H height\fP] [\fB-l loops\fP] [\fB-r resolution\fP] image
+[\fB-hct\fP] [\fB-w\fR \fIWIDTH\fP | \fB-H\fR \fIHEIGHT\fP] [\fB-l\fR \fILOOPS\fP] [\fB-r\fR \fIRESOLUTION\fP] IMAGE
 
 .SH DESCRIPTION
 .B catimg
-is a little program written in C with no dependencies that prints images in the terminal. It supports JPEG, PNG and GIF formats.
+is a little program written in C with no dependencies that prints images in the terminal.
+It supports JPEG, PNG and GIF formats.
 
 .SH OPTIONS
 .TP
 \fB\-c\fR
-Convert colors to a restricted palette. This is useful when terminal only support a limited set of colors. This transformation should be more accurate than the one performed by the terminal.
+Convert colors to a restricted palette.
+This is useful when terminal only support a limited set of colors.
+This transformation should be more accurate than the one performed by the terminal.
 .TP
 \fB\-h\fR
 Prints a help message
 .TP
-\fB\-H\fR HEIGHT
+\fB\-H\fR \fIHEIGHT\fR
 Specify the height of the displayed image, passing '0' will use terminal height.
 .TP
-\fB\-l\fR LOOPS
-Specify the amount of loops that catimg should repeat a GIF. A value of 1 means that the GIF will be displayed twice. A negative value implies infinity.
+\fB\-l\fR \fILOOPS\fR
+Specify the amount of loops that catimg should repeat a GIF.
+A value of 1 means that the GIF will be displayed twice. A negative value implies infinity.
 .TP
-\fB\-r\fR RESOLUTION
-Possible values 1 or 2. Force the resolution of the image. By default catimg will check if rendering in higher resolution is possible and do so or use the lower one.
+\fB\-r\fR \fIRESOLUTION\fR
+Possible values 1 or 2. Force the resolution of the image.
+By default catimg will check if rendering in higher resolution is possible and do so or use the lower one.
 .TP
 \fB\-t\fR
 Disables true color (24-bit) support, falling back to 256 color escape codes instead.
 .TP
-\fB\-w\fR WIDTH
+\fB\-w\fR \fIWIDTH\fR
 Specify the width of the displayed image, by default catimg will use the terminal width.
+
+.SH EXAMPLES
+Here some examples how to use catimg.
+.nf
+.PP
+Ouput of image to terminal width, that is the default:
+.PP
+.RS
+catimg ~/Pictures/examples-image.jpg
+or
+catimg -w 0 ~/Pictures/examples-image.jpg
+.RE
+.PP
+Ouput of image to terminal height:
+.PP
+.RS
+catimg -H 0 ~/Pictures/examples-image.jpg
+.RE
+.PP
+Ouput of image with resolution set to 1 and half of terminal width:
+.PP
+.RS
+export RESOLUTION=1
+export HALF_TERM_WIDTH=$(( $RESOLUTION * $(stty size | cut -d" " -f2) / 2 ))
+catimg -r ${RESOLUTION} -w ${HALF_TERM_WIDTH} ~/Pictures/examples-image.jpg
+.RE
+.PP
+And the same with resolution set to 2 and half of terminal width:
+.PP
+.RS
+export RESOLUTION=2
+# the below lines stay the same
+export HALF_TERM_WIDTH=$(( ${RESOLUTION} * $(stty size | cut -d" " -f2) / 2 ))
+catimg -r ${RESOLUTION} -w ${HALF_TERM_WIDTH} ~/Pictures/examples-image.jpg
+.RE
+.PP
+.fi
 
 .SH BUGS
 Please report any bugs to https://github.com/posva/catimg/issues.

@@ -1,11 +1,11 @@
-.TH CATIMG "1" "January 2017" "catimg" "General Commands Manual"
+.TH CATIMG "1" "June 2020" "catimg" "General Commands Manual"
 
 .SH NAME
 catimg \- fast image printing in to your terminal
 
 .SH SYNOPSIS
 .B catimg
-[\fIoptions\fP]
+[\fB-hct\fP] [\fB-w width\fP | \fB-H height\fP] [\fB-l loops\fP] [\fB-r resolution\fP]
 \fBimage\fP [\fBimage\fP]...
 
 .SH DESCRIPTION
@@ -19,6 +19,9 @@ Prints a help message
 .TP
 \fB\-w\fR WIDTH
 Specify the width of the displayed image, by default catimg will use the terminal width.
+.TP
+\fB\-H\fR HEIGHT
+Specify the height of the displayed image, by default catimg will use the terminal height.
 .TP
 \fB\-l\fR LOOPS
 Specify the amount of loops that catimg should repeat a GIF. A value of 1 means that the GIF will be displayed twice. A negative value implies infinity.

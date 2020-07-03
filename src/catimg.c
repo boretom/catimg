@@ -289,11 +289,16 @@ int main(int argc, char *argv[])
         }
 
         img_free(&img);
+        // Display the cursor again
+        printf("\e[?25h");
+
+        char *b = 0;
+        // print filename after picture if more than one picture is outputed
+        if (i > 1) {
+            printf("%s\n", (b = strrchr(files[j], '/')) ? ++b : (b = files[j]) );
+        }
 
     } // for (j=0; j < i; j++)
-
-    // Display the cursor again
-    printf("\e[?25h");
 
     free_hash_colors();
 

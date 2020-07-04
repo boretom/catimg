@@ -241,7 +241,7 @@ int get_exif_rotation(char *file) {
 
     */
 
-    printf("EXIF orientation %c\n", '0' + set_flag);
+    // printf("EXIF orientation %c\n", '0' + set_flag);
 
     return set_flag;
 }
@@ -313,10 +313,41 @@ int main(int argc, char *argv[])
     } else {
         img_load_from_file(&img, file);
     }
-    if (cols < img.width) {
+    if (orientation < 6 && cols < img.width) {
         float sc = cols/(float)img.width;
         img_resize(&img, sc, sc, orientation);
+    } else if (orientation >= 6 && cols < img.height) {
+        float sc = cols/(float)img.height;
+        img_resize(&img, sc, sc, orientation);
     }
+    switch (orientation) {
+        case 2:
+            img_flip_horizontal(&img);
+            break;
+        case 3:
+            img_flip_vertical(&img);
+            img_flip_horizontal(&img);
+            break;
+        case 4:
+            img_flip_vertical(&img);
+            break;
+        case 5:
+            img_flip_horizontal(&img);
+            break;
+        case 6:
+            // rotation clock wise is enough
+            break;
+        case 7:
+            img_flip_vertical(&img);
+            break;
+        case 8:
+            img_flip_vertical(&img);
+            img_flip_horizontal(&img);
+            break;
+        default:
+            ; // nothing to do
+    }
+
     if (convert)
         img_convert_colors(&img);
     /*printf("Loaded %s: %ux%u. Console width: %u\n", file, img.width, img.height, cols);*/

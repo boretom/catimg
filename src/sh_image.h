@@ -118,5 +118,21 @@ const color_t* img_get_pixel(image_t *img, uint32_t x, uint32_t y);
  */
 void img_set_pixel(image_t *img, uint32_t x, uint32_t y, const color_t *col);
 
+/**
+ * @brief flip image vertically
+ *
+ * @param img instance affected
+ */
+void img_flip_vertical(image_t *img);
+
+/**
+ * @brief flip image horizontally
+ *
+ * @param img instance affected
+ */
+void img_flip_horizontal(image_t *img);
+
+
+
 ///@}
 #endif

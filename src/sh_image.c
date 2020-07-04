@@ -313,41 +313,25 @@ void img_resize(image_t *img, float wsc, float hsc, uint8_t orientation)
                                                 b += img->pixels[src_offset + srcx + xi +(srcy+yi)*img_width].b;
                                                 a += img->pixels[src_offset + srcx + xi +(srcy+yi)*img_width].a;
                                         }
-                                pix[offset + x+y*w].r = r/wh;
-                                pix[offset + x+y*w].g = g/wh;
-                                pix[offset + x+y*w].b = b/wh;
-                                pix[offset + x+y*w].a = a/wh;
+                                if (orientation < 6) {
+                                    pix[offset + x+y*w].r = r/wh;
+                                    pix[offset + x+y*w].g = g/wh;
+                                    pix[offset + x+y*w].b = b/wh;
+                                    pix[offset + x+y*w].a = a/wh;
+                                } else {
+                                    pix[offset + y+x*h].r = r/wh;
+                                    pix[offset + y+x*h].g = g/wh;
+                                    pix[offset + y+x*h].b = b/wh;
+                                    pix[offset + y+x*h].a = a/wh;
+                                }
                         }
                 }
         }
         free(img->pixels);
 
-        // now rotate if necessary
-        color_t *pix_r = NULL;
-        if (orientation > 5) {
-            if (!(pix_r = malloc(sizeof(color_t)*w*h * img->frames))) {
-                 perror("malloc error\n");
-                 exit(1);
-             }
-             uint32_t offset = 0 ;
-             for (uint32_t x = 0; x < w; x++) {
-                 for (uint32_t y = 0; y < h; y++) {
-                     pix_r[offset + y + x*h].r = pix[offset + x + y*w].r;
-                     pix_r[offset + y + x*h].g = pix[offset + x + y*w].g;
-                     pix_r[offset + y + x*h].b = pix[offset + x + y*w].b;
-                     pix_r[offset + y + x*h].a = pix[offset + x + y*w].a;
-
-                 }
-             } 
-            img->pixels = pix_r;
-            img->width = h;
-            img->height = w;
-        } else {
-            img->pixels = pix;
-            img->width = w;
-            img->height = h;
-        }
-        // end rotate
+        img->pixels = pix;
+        img->width = (orientation < 6)? w : h;
+        img->height = (orientation < 6)? h : w;
 }
 
 const color_t* img_get_pixel(image_t *img, uint32_t x, uint32_t y)

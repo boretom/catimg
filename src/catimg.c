@@ -294,13 +294,17 @@ int main(int argc, char *argv[])
 
         char *b = 0;
         // print filename after picture if more than one picture is outputed
+        // and not longer than the picture width
         if (i > 1) {
-            printf("%s\n", (b = strrchr(files[j], '/')) ? ++b : (b = files[j]) );
+            printf("%.*s\n", img.width, (b = strrchr(files[j], '/')) ? ++b : (b = files[j]) );
         }
 
     } // for (j=0; j < i; j++)
 
     free_hash_colors();
+
+    // Display the cursor again
+    printf("\e[?25h");
 
     return 0;
 }

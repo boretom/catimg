@@ -93,7 +93,7 @@ void img_free(image_t *img);
  * @param wsc horizontal scale
  * @param hsc vertical scale
  */
-void img_resize(image_t *img, float wsc, float hsc);
+void img_resize(image_t *img, float wsc, float hsc, uint8_t orientation);
 
 /**
  * @brief Convert the colors from an image to the terminal palette
@@ -117,6 +117,22 @@ const color_t* img_get_pixel(image_t *img, uint32_t x, uint32_t y);
  * @return a const pointer to the color
  */
 void img_set_pixel(image_t *img, uint32_t x, uint32_t y, const color_t *col);
+
+/**
+ * @brief flip image vertically
+ *
+ * @param img instance affected
+ */
+void img_flip_vertical(image_t *img);
+
+/**
+ * @brief flip image horizontally
+ *
+ * @param img instance affected
+ */
+void img_flip_horizontal(image_t *img);
+
+
 
 ///@}
 #endif

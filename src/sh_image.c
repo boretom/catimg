@@ -262,16 +262,19 @@ void img_free(image_t *img)
         }
 }
 
-void img_resize(image_t *img, float wsc, float hsc)
+void img_resize(image_t *img, float wsc, float hsc, uint8_t orientation)
 {
         color_t *pix = NULL;
         uint32_t w = img->width*wsc,
                  h = img->height*hsc,
                  wh;
+        int32_t wsc_i, hsc_i;
+
         wsc = 1.f/wsc;
         hsc = 1.f/hsc;
-        int32_t wsc_i = wsc,
-                hsc_i = hsc;
+
+        wsc_i = wsc;
+        hsc_i = hsc;
         wh = hsc_i*wsc_i;
 
         if (!(pix = malloc(sizeof(color_t)*w*h * img->frames))) {
@@ -293,17 +296,25 @@ void img_resize(image_t *img, float wsc, float hsc)
                                                 b += img->pixels[src_offset + srcx + xi +(srcy+yi)*img->width].b;
                                                 a += img->pixels[src_offset + srcx + xi +(srcy+yi)*img->width].a;
                                         }
-                                pix[offset + x+y*w].r = r/wh;
-                                pix[offset + x+y*w].g = g/wh;
-                                pix[offset + x+y*w].b = b/wh;
-                                pix[offset + x+y*w].a = a/wh;
+                                if (orientation < 5) {
+                                    pix[offset + x+y*w].r = r/wh;
+                                    pix[offset + x+y*w].g = g/wh;
+                                    pix[offset + x+y*w].b = b/wh;
+                                    pix[offset + x+y*w].a = a/wh;
+                                 } else {
+                                    pix[offset + (h-y-1)+x*h].r = r/wh;
+                                    pix[offset + (h-y-1)+x*h].g = g/wh;
+                                    pix[offset + (h-y-1)+x*h].b = b/wh;
+                                    pix[offset + (h-y-1)+x*h].a = a/wh;
+                                }
                         }
                 }
         }
         free(img->pixels);
+
         img->pixels = pix;
-        img->width = w;
-        img->height = h;
+        img->width = (orientation < 5)? w : h;
+        img->height = (orientation < 5)? h : w;
 }
 
 const color_t* img_get_pixel(image_t *img, uint32_t x, uint32_t y)
@@ -316,4 +327,47 @@ void img_set_pixel(image_t *img, uint32_t x, uint32_t y, const color_t *col)
 {
         assert(x<img->width && y<img->height);
         col_cpy(col, &img->pixels[x+y*img->width]);
+}
+
+void img_flip_vertical(image_t *img)
+{
+    uint32_t w = img->width, h = img->height;
+    color_t *pix = img->pixels,
+            *p1 = malloc(sizeof(color_t)*w),
+            *py1 = NULL, *py2 = NULL;
+
+    for (uint32_t frame = 0; frame < img->frames; frame++) {
+        uint32_t offset = w*h * frame;
+        for (uint32_t y = 0; y < (h / 2); y++) {
+            if (y == (h - 1 - y) ) continue;
+
+            py1 = &pix[offset + y*w];
+            py2 = &pix[offset + (h-y-1)*w];
+            memcpy(p1, py1, sizeof(color_t)*w);
+            memcpy(py1, py2, sizeof(color_t)*w);
+            memcpy(py2, p1, sizeof(color_t)*w);
+        }
+    }
+    free(p1);
+}
+
+void img_flip_horizontal(image_t *img)
+{
+    uint32_t w = img->width, h = img->height;
+    color_t *pix = img->pixels;
+
+    for (uint32_t frame = 0; frame < img->frames; frame++) {
+        uint32_t offset = w*h * frame;
+        color_t p;
+
+        for (uint32_t y = 0; y < h; y++) {
+            for (uint32_t x = 0; x < (w / 2); x++) {
+                if (x == (w - 1 - x) ) continue;
+
+                p = pix[offset + y*w + x];
+                pix[offset + y*w + x] = pix[offset + y*w + (w-x-1)];
+                pix[offset + y*w + (w-x-1)] = p;
+            }
+        }
+    }
 }

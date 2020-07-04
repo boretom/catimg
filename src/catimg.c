@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/ioctl.h>
+#include "ead_exif.h"
 
 #define USAGE "Usage: catimg [-hct] [-w width | -H height] [-l loops] [-r resolution] image-file\n\n" \
   "  -h: Displays this message\n"                                      \
@@ -14,6 +15,7 @@
   "  -l: Loops are only useful with GIF files. A value of 1 means that the GIF will " \
   "be displayed twice because it loops once. A negative value means infinite " \
   "looping\n"                                                           \
+  "  -o: Honor EXIF orientation " \
   "  -r: Resolution must be 1 or 2. By default catimg checks for unicode support to " \
   "use higher resolution\n" \
   "  -c: Convert colors to a restricted palette\n" \
@@ -74,11 +76,11 @@ int main(int argc, char *argv[])
     uint32_t cols = 0, rows = 0, precision = 0;
     uint32_t max_cols = 0, max_rows = 0;
     uint8_t convert = 0;
-    uint8_t true_color = 1;
+    uint8_t true_color = 1, orientation = 0;
     uint8_t adjust_to_height = 0, adjust_to_width = 0;
     float scale_cols = 0, scale_rows = 0;
 
-    while ((c = getopt (argc, argv, "H:w:l:r:hct")) != -1)
+    while ((c = getopt (argc, argv, "H:w:l:r:hcot")) != -1)
         switch (c) {
             case 'H':
                 rows = strtol(optarg, &num, 0);
@@ -113,7 +115,10 @@ int main(int argc, char *argv[])
             case 'c':
                 convert = 1;
                 break;
-            case 't':
+            case 'o':
+                orientation = 1;
+                break;
+             case 't':
                 true_color = 0;
                 break;
             default:
@@ -136,6 +141,9 @@ int main(int argc, char *argv[])
             precision = 1;
     }
 
+    // get EXIF rotation (only for certain JPG right now)
+    if (orientation) orientation = get_exif_rotation(file);
+
     // if precision is 2 we can use the terminal full width/height. Otherwise we can only use half
     max_cols = terminal_columns() / (2 / precision);
     max_rows = terminal_rows() * precision;
@@ -145,20 +153,56 @@ int main(int argc, char *argv[])
     } else {
         img_load_from_file(&img, file);
     }
+
+    // FIXME: add orientation <5 or orientation >= 5 somewhere
+    // if (orientation < 5 && cols < img.width) {
     if (cols == 0 && rows == 0) {
         scale_cols = max_cols / (float)img.width;
         scale_rows = max_rows / (float)img.height;
         if (adjust_to_height && scale_rows < scale_cols && max_rows < img.height)
             // rows == 0 and adjust_to_height > adjust to height instead of width
-            img_resize(&img, scale_rows, scale_rows);
+            img_resize(&img, scale_rows, scale_rows, orientation);
         else if (max_cols < img.width)
-            img_resize(&img, scale_cols, scale_cols);
+            img_resize(&img, scale_cols, scale_cols, orientation);
     } else if (cols > 0 && cols < img.width) {
         scale_cols = cols / (float)img.width;
-        img_resize(&img, scale_cols, scale_cols);
+        img_resize(&img, scale_cols, scale_cols, orientation);
      } else if (rows > 0 && rows < img.height) {
         scale_rows = rows / (float)img.height;
-        img_resize(&img, scale_rows, scale_rows);
+        img_resize(&img, scale_rows, scale_rows, orientation);
+        float sc = cols/(float)img.width;
+    }
+
+    switch (orientation) {
+        case 2:
+            img_flip_horizontal(&img);
+            break;
+        case 3:
+            img_flip_vertical(&img);
+            img_flip_horizontal(&img);
+            break;
+        case 4:
+            img_flip_vertical(&img);
+            break;
+        case 5:
+            // clockwise rotate while resize 
+            img_flip_horizontal(&img);
+            break;
+        case 6:
+            // clockwise rotate while resize 
+            // ... is enough :)
+            break;
+        case 7:
+            // clockwise rotate while resize 
+            img_flip_vertical(&img);
+            break;
+        case 8:
+            // clockwise rotate while resize 
+            img_flip_vertical(&img);
+            img_flip_horizontal(&img);
+            break;
+        default:
+            ; // nothing to do
     }
 
     if (convert)

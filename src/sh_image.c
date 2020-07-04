@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include "stb_image_resize.h"
+
 typedef struct gif_result_t {
         int delay;
         unsigned char *data;
@@ -274,6 +277,43 @@ void img_resize(image_t *img, float wsc, float hsc)
                 hsc_i = hsc;
         wh = hsc_i*wsc_i;
 
+#if 0
+       // test stb_image_resize functions
+       // result: all 50+ percent slower than the original implementation
+
+        if (!(pix = malloc(sizeof(color_t)*w*h * img->frames))) {
+                perror("malloc error\n");
+                exit(1);
+        }
+
+//        printf("sizeof color_t: %lu\n", sizeof(color_t));
+//        printf("input WxH: %dx%d, frames: %d, output WxH: %dx%d\n", img->width, img->height,
+//                 img->frames, w, h);
+        unsigned char *input = (unsigned char *)img->pixels;
+/*
+        int ret = stbir_resize_uint8(input, img->width, img->height, 0,
+                          pix, w, h, 0, 4);
+ */
+
+        int ret = stbir_resize_uint8_generic(input, img->width, img->height, 0,
+                          (unsigned char *)pix, w, h, 0, 4,
+                          3, // alpha channel
+                          0, // flags
+                          STBIR_EDGE_CLAMP, // stbir_edge
+                          STBIR_FILTER_BOX,
+                          STBIR_COLORSPACE_LINEAR,
+                          NULL // alloc_context
+                  );
+
+        if (!ret) {
+            printf("the fancy resize failed\n");
+        }
+
+        free(img->pixels);
+        img->pixels = pix;
+        img->width = w;
+        img->height = h;
+#else
         if (!(pix = malloc(sizeof(color_t)*w*h * img->frames))) {
                 perror("malloc error\n");
                 exit(1);
@@ -304,6 +344,7 @@ void img_resize(image_t *img, float wsc, float hsc)
         img->pixels = pix;
         img->width = w;
         img->height = h;
+#endif
 }
 
 const color_t* img_get_pixel(image_t *img, uint32_t x, uint32_t y)

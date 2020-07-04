@@ -93,7 +93,7 @@ void img_free(image_t *img);
  * @param wsc horizontal scale
  * @param hsc vertical scale
  */
-void img_resize(image_t *img, float wsc, float hsc);
+void img_resize(image_t *img, float wsc, float hsc, uint8_t orientation);
 
 /**
  * @brief Convert the colors from an image to the terminal palette

@@ -15,7 +15,7 @@
   "  -l: Loops are only useful with GIF files. A value of 1 means that the GIF will " \
   "be displayed twice because it loops once. A negative value means infinite " \
   "looping\n"                                                           \
-  "  -o: Honor EXIF orientation " \
+  "  -o: Honor EXIF orientation\n" \
   "  -r: Resolution must be 1 or 2. By default catimg checks for unicode support to " \
   "use higher resolution\n" \
   "  -c: Convert colors to a restricted palette\n" \
@@ -154,23 +154,33 @@ int main(int argc, char *argv[])
         img_load_from_file(&img, file);
     }
 
-    // FIXME: add orientation <5 or orientation >= 5 somewhere
-    // if (orientation < 5 && cols < img.width) {
     if (cols == 0 && rows == 0) {
-        scale_cols = max_cols / (float)img.width;
-        scale_rows = max_rows / (float)img.height;
+        if (orientation < 5) {
+            scale_cols = max_cols / (float)img.width;
+            scale_rows = max_rows / (float)img.height;
+        } else {
+            scale_cols = max_cols / (float)img.height;
+            scale_rows = max_rows / (float)img.width;
+        }
         if (adjust_to_height && scale_rows < scale_cols && max_rows < img.height)
             // rows == 0 and adjust_to_height > adjust to height instead of width
             img_resize(&img, scale_rows, scale_rows, orientation);
         else if (max_cols < img.width)
             img_resize(&img, scale_cols, scale_cols, orientation);
     } else if (cols > 0 && cols < img.width) {
-        scale_cols = cols / (float)img.width;
+        if (orientation < 5) {
+            scale_cols = cols / (float)img.width;
+        } else {
+            scale_cols = cols / (float)img.height;
+        }
         img_resize(&img, scale_cols, scale_cols, orientation);
      } else if (rows > 0 && rows < img.height) {
-        scale_rows = rows / (float)img.height;
+        if (orientation < 5) {
+            scale_rows = rows / (float)img.height;
+        } else {
+            scale_rows = rows / (float)img.width;
+        }
         img_resize(&img, scale_rows, scale_rows, orientation);
-        float sc = cols/(float)img.width;
     }
 
     switch (orientation) {
@@ -185,19 +195,19 @@ int main(int argc, char *argv[])
             img_flip_vertical(&img);
             break;
         case 5:
-            // clockwise rotate while resize 
+            // clockwise rotate while resize
             img_flip_horizontal(&img);
             break;
         case 6:
-            // clockwise rotate while resize 
+            // clockwise rotate while resize
             // ... is enough :)
             break;
         case 7:
-            // clockwise rotate while resize 
+            // clockwise rotate while resize
             img_flip_vertical(&img);
             break;
         case 8:
-            // clockwise rotate while resize 
+            // clockwise rotate while resize
             img_flip_vertical(&img);
             img_flip_horizontal(&img);
             break;

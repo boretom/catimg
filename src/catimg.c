@@ -142,7 +142,13 @@ int main(int argc, char *argv[])
     }
 
     // get EXIF rotation (only for certain JPG right now)
-    if (orientation) orientation = get_exif_rotation(file);
+    if (orientation) {
+        orientation = get_exif_rotation(file);
+        if (orientation < 1 || orientation > 8) {
+            orientation = 1;
+        }
+        // printf("orientation: %d\n", orientation);
+    }
 
     // if precision is 2 we can use the terminal full width/height. Otherwise we can only use half
     max_cols = terminal_columns() / (2 / precision);
